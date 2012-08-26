@@ -20,11 +20,10 @@ displayShip id		=
 displayField			:: Track -> Position -> IO ()
 displayField (_,b,r,s) p
   = do
-    if (isBlocked b p 0) then putStr "@@@"
-    else if (isRoute r p) then putStr " # "
-      else do
-	if (not $ null shs) then displayShip $ head shs
-        else putStr " . "
+    if (not $ null shs) then displayShip $ head shs
+    else if (isBlocked b p 0) then putStr "@@@"
+      else if (isRoute r p) then putStr " # "
+	else putStr " . "
 	where shs = isShip s p
 
 -- ----------------------------------------

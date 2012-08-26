@@ -6,6 +6,7 @@
 
 module Datatypes where
 
+import Control.Exception 
 
 -- ----------------------------------------
 -- Base types
@@ -46,6 +47,31 @@ type Track		= (Size, Blockades, Route, Ships)
 
 -- ----------------------------------------
 -- 
+data Direction		= STOP | UP | RIGHT | DOWN | LEFT
+  deriving (Show, Read, Eq, Enum)
+
+-- ----------------------------------------
+-- 
+readDirection	:: IO Direction
+readDirection	= do
+  putStr "enter direction:"
+  raw <- try getLine :: IO (Either IOException String)
+  putStr "\n\n"
+  case raw of 
+    Left _ -> do  -- Exception
+      putStrLn ("Error")
+      readDirection
+    Right rawStr -> do -- read string
+      dir <- try $ evaluate $ read rawStr :: IO (Either ErrorCall Direction)
+      case dir of
+        Left _ -> do
+          putStrLn "Invalid direction! "
+          readDirection
+        Right d -> do
+          return d
+
+-- ----------------------------------------
+-- 
 isShip		:: Ships -> Position -> [ShipID]
 isShip s p	= isShip' s p []
   where 
@@ -73,3 +99,21 @@ isRoute [] _
 isRoute ((rx,ry):rs) (x,y)
   = if ((rx == x) && (ry == y)) then True
     else isRoute rs (x,y)
+    
+-- ----------------------------------------
+-- 
+deleteElem		:: Eq a => [a] -> a -> [a]
+deleteElem [] e		= []
+deleteElem (x:xs) e	= if (x == e) then deleteElem xs e else x : deleteElem xs e
+
+
+
+
+
+
+
+
+
+
+
+

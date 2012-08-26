@@ -50,7 +50,7 @@ generateBlockades d s n = genBlockade d s n []
       x <- rand (mx - w)
       y <- rand (my - h)
       if (isBlocked bs (x,y) 2) then genBlockade (mw,mh) (mx,my) (n) bs
-      else genBlockade (mw,mh) (mx,my) (n-1) (((x+1,y+1),(w+1,h+1)):bs)
+      else genBlockade (mw,mh) (mx,my) (n-1) (((x,y),(w,h)):bs)
       
 -- ----------------------------------------
 -- Generates a racetrack      
@@ -64,10 +64,77 @@ generateTrack s m nb nr	= do
   r <- generateRoute s b nr
   return (s,b,r,[])
   
-main :: IO ()
-main = do
-  t <- generateTrack (30, 25) (5,5) 25 12
-  putStrLn $ show t
+-- ----------------------------------------
+--   
+addShipToTrack		:: Track -> ShipID -> IO Track
+addShipToTrack (d,b,(r:rs),s) id 
+  = return (d,b,(r:rs),(id,r,rs):s)
+
+-- ----------------------------------------
+--   
+move 		:: Position -> Direction -> Position
+move (x,y) d	= 
+  case d of
+    UP		-> (x,y-1)
+    RIGHT	-> (x+1,y)
+    DOWN	-> (x,y+1)
+    LEFT	-> (x-1,y)
+
+-- ----------------------------------------
+--   
+moveShip		:: Track -> ShipID -> Direction -> IO Track
+moveShip t@(d,b,r,s) id dir 	
+  = return (d,b,r,s')
+  where
+    s' 		= moveShip' s
+    moveShip'	:: Ships -> Ships
+    moveShip' [] 		
+      = []
+    moveShip' ((sid,p,sr):sl)
+      = if (sid == id) then
+          if (isBlocked b p' 0) then 
+            (sid,p,sr) : moveShip' sl
+          else 
+            if (isRoute sr p') then
+              ((sid, p', deleteElem sr p):sl) 
+            else
+              ((sid, p', sr):sl) 
+        else
+          (sid,p,sr) : moveShip' sl
+        where 
+          p' = move p dir
+  
+-- ----------------------------------------
+--   
+test :: IO ()
+test = do
+  t <- generateTrack (40, 30) (4,4) 75 12
+  t <- addShipToTrack t 1
+  t <- addShipToTrack t 2
+  t <- moveShip t 1 UP 
+  t <- moveShip t 1 LEFT
+  t <- moveShip t 2 DOWN
+  displayTrack t
+  
+  
+-- ----------------------------------------
+--   
+playerMove 	:: ShipID -> Track -> IO Track
+playerMove id t	= do
+  putStr ("Player " ++ (show id) ++ ", ")
+  d <- readDirection
+  t <- moveShip t id d
+  displayTrack t
+  playerMove id t 
+  
+-- ----------------------------------------
+--   
+play :: IO ()
+play = do
+  t <- generateTrack (40, 30) (4,4) 75 12
+  t <- addShipToTrack t 1
+  displayTrack t
+  t <- playerMove 1 t
   displayTrack t
   
   
