@@ -11,6 +11,7 @@ import Datatypes
 import Display
 import Haskeroids
 import NavManual
+import NavAuto
 
  
 -- ----------------------------------------

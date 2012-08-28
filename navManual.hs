@@ -24,4 +24,4 @@ manual id t	= do
   displayTrack t
   if (elem  id $ shipsFinished t) then return t else manual id t
   where
-    s = getShip (getShips t) 1
+    s = getShip 1 $ getShips t

@@ -74,6 +74,23 @@ readDirection	= do
         Right d -> do
           return d
 
+
+
+-- ----------------------------------------
+-- Get the blockades
+getSize			:: Track -> Size
+getSize (s,_,_,_)	= s
+	  
+-- ----------------------------------------
+-- Get the blockades
+getBlockades		:: Track -> Blockades
+getBlockades (_,b,_,_)	= b
+
+-- ----------------------------------------
+-- Get the blockades
+getRoute		:: Track -> Route
+getRoute (_,_,r,_)	= r
+
 -- ----------------------------------------
 -- Accessing the shiplist of a track
 getShips		:: Track -> Ships
@@ -81,9 +98,15 @@ getShips (_,_,_,s)	= s
 
 -- ----------------------------------------
 -- Searching a ship inside a shiplist
-getShip			:: Ships -> ShipID -> Maybe Ship
-getShip [] i		= Nothing
-getShip ((id,p,r):ss) i	= if (i == id) then Just (id,p,r) else getShip ss i
+getShip			:: ShipID -> Ships -> Maybe Ship
+getShip i []		= Nothing
+getShip i ((id,p,r):ss) = if (i == id) then Just (id,p,r) else getShip i ss
+
+-- ----------------------------------------
+-- Searching a ship inside a shiplist
+getShipNull		:: ShipID -> Ships -> Ship
+getShipNull i []		= (-1, (-1,-1), [])
+getShipNull i ((id,p,r):ss)	= if (i == id) then (id,p,r) else getShipNull i ss
 
 -- ----------------------------------------
 -- Gets the remaining waypoints from a ship
@@ -95,6 +118,7 @@ getShipRoute (_,_,r)	= r
 getShipPosition		:: Ship -> Position
 getShipPosition (_,p,_)	= p
 
+
 -- ----------------------------------------
 --   
 moveObject 		:: Position -> Direction -> Position
@@ -105,6 +129,15 @@ moveObject (x,y) d	=
     RIGHT	-> (x+1,y)
     DOWN	-> (x,y+1)
     LEFT	-> (x-1,y)
+    
+-- ----------------------------------------
+--   
+distance	:: Position -> Position -> Integer
+distance (x1,y1) (x2,y2)	
+  = round $ sqrt $ fromIntegral ((x*x) + (y*y))
+    where
+      x = x2-x1
+      y = y2-y1      
 
 -- ----------------------------------------
 --   
@@ -148,9 +181,9 @@ isRoute ((rx,ry):rs) (x,y)
     
 -- ----------------------------------------
 -- 
-deleteElem		:: Eq a => [a] -> a -> [a]
-deleteElem [] e		= []
-deleteElem (x:xs) e	= if (x == e) then deleteElem xs e else x : deleteElem xs e
+deleteElem		:: Eq a => a -> [a] -> [a]
+deleteElem e []		= []
+deleteElem e (x:xs)  	= if (x == e) then deleteElem e xs else x : deleteElem e xs
 
 
 

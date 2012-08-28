@@ -86,7 +86,7 @@ moveShip t@(d,b,r,s) id dir
             (sid,p,sr) : moveShip' sl
           else 
             if (isRoute sr p') then
-	      ((sid, p', deleteElem sr p'):sl) 
+	      ((sid, p', deleteElem p' sr):sl) 
             else
               ((sid, p', sr):sl) 
         else
