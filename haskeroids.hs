@@ -1,5 +1,5 @@
 -- ----------------------------------------
--- Haskeroids - Server
+-- Haskeroids - Game Functions
 --
 -- Author: Hanno Sternberg
 -- ----------------------------------------
@@ -63,22 +63,12 @@ generateTrack s m nb nr	= do
   b <- generateBlockades s m nb
   r <- generateRoute s b nr
   return (s,b,r,[])
-  
+
 -- ----------------------------------------
 --   
 addShipToTrack		:: Track -> ShipID -> IO Track
 addShipToTrack (d,b,(r:rs),s) id 
   = return (d,b,(r:rs),(id,r,rs):s)
-
--- ----------------------------------------
---   
-move 		:: Position -> Direction -> Position
-move (x,y) d	= 
-  case d of
-    UP		-> (x,y-1)
-    RIGHT	-> (x+1,y)
-    DOWN	-> (x,y+1)
-    LEFT	-> (x-1,y)
 
 -- ----------------------------------------
 --   
@@ -96,47 +86,15 @@ moveShip t@(d,b,r,s) id dir
             (sid,p,sr) : moveShip' sl
           else 
             if (isRoute sr p') then
-              ((sid, p', deleteElem sr p):sl) 
+	      ((sid, p', deleteElem sr p'):sl) 
             else
               ((sid, p', sr):sl) 
         else
           (sid,p,sr) : moveShip' sl
         where 
-          p' = move p dir
+          p' = moveObject p dir
   
--- ----------------------------------------
---   
-test :: IO ()
-test = do
-  t <- generateTrack (40, 30) (4,4) 75 12
-  t <- addShipToTrack t 1
-  t <- addShipToTrack t 2
-  t <- moveShip t 1 UP 
-  t <- moveShip t 1 LEFT
-  t <- moveShip t 2 DOWN
-  displayTrack t
-  
-  
--- ----------------------------------------
---   
-playerMove 	:: ShipID -> Track -> IO Track
-playerMove id t	= do
-  putStr ("Player " ++ (show id) ++ ", ")
-  d <- readDirection
-  t <- moveShip t id d
-  displayTrack t
-  playerMove id t 
-  
--- ----------------------------------------
---   
-play :: IO ()
-play = do
-  t <- generateTrack (40, 30) (4,4) 75 12
-  t <- addShipToTrack t 1
-  displayTrack t
-  t <- playerMove 1 t
-  displayTrack t
-  
+
   
   
   

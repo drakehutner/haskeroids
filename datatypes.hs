@@ -52,9 +52,13 @@ data Direction		= STOP | UP | RIGHT | DOWN | LEFT
 
 -- ----------------------------------------
 -- 
+type ControlFunc 	= ShipID -> Track -> IO Track  
+  
+-- ----------------------------------------
+-- 
 readDirection	:: IO Direction
 readDirection	= do
-  putStr "enter direction:"
+  putStr ("enter direction " ++ (show [STOP, UP, RIGHT, DOWN, LEFT]) ++ ": ") 
   raw <- try getLine :: IO (Either IOException String)
   putStr "\n\n"
   case raw of 
@@ -70,6 +74,48 @@ readDirection	= do
         Right d -> do
           return d
 
+-- ----------------------------------------
+-- Accessing the shiplist of a track
+getShips		:: Track -> Ships
+getShips (_,_,_,s)	= s
+
+-- ----------------------------------------
+-- Searching a ship inside a shiplist
+getShip			:: Ships -> ShipID -> Maybe Ship
+getShip [] i		= Nothing
+getShip ((id,p,r):ss) i	= if (i == id) then Just (id,p,r) else getShip ss i
+
+-- ----------------------------------------
+-- Gets the remaining waypoints from a ship
+getShipRoute		:: Ship -> Route
+getShipRoute (_,_,r)	= r
+
+-- ----------------------------------------
+-- Get the position of a ship
+getShipPosition		:: Ship -> Position
+getShipPosition (_,p,_)	= p
+
+-- ----------------------------------------
+--   
+moveObject 		:: Position -> Direction -> Position
+moveObject (x,y) d	= 
+  case d of
+    STOP 	-> (x,y)
+    UP		-> (x,y-1)
+    RIGHT	-> (x+1,y)
+    DOWN	-> (x,y+1)
+    LEFT	-> (x-1,y)
+
+-- ----------------------------------------
+--   
+shipsFinished		:: Track -> [ShipID]
+shipsFinished t 		= shipsFinished' [] $ getShips t
+  where
+    shipsFinished' 	:: [ShipID] -> Ships -> [ShipID]
+    shipsFinished' l []		= l
+    shipsFinished' l ((id,_,r):ss)	
+      = if (null r) then shipsFinished' (id:l) ss else shipsFinished' l ss
+    
 -- ----------------------------------------
 -- 
 isShip		:: Ships -> Position -> [ShipID]
