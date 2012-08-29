@@ -29,13 +29,48 @@ prepareRoute r p 	= prepRoute p (-1,-1) (-1) r r []
         d = distance p r
 
 -- ----------------------------------------
+-- 
+get90DegDirections	:: Direction -> (Direction, Direction)
+get90DegDirections d	= 
+  case d of 
+    LEFT	-> (UP, DOWN)
+    DOWN	-> (LEFT, RIGHT)
+    RIGHT 	-> (DOWN, UP)
+    UP		-> (RIGHT, LEFT)
+    STOP	-> (STOP, STOP)
+
+-- ----------------------------------------
+-- 
+getOpposite	:: Direction -> Direction
+getOpposite d	= 
+  case d of
+    LEFT 	-> RIGHT
+    UP		-> DOWN
+    RIGHT	-> LEFT
+    DOWN	-> UP
+    STOP	-> STOP
+    
+    
+	
+-- ----------------------------------------
+-- Evade obstacles
+findAlternative		:: Position -> Track -> Direction -> Direction
+findAlternative p t d 	= 
+  if (not $ isBlocked (getBlockades t) (moveObject p l) 0) then l
+  else if (not $ isBlocked (getBlockades t) (moveObject p r) 0) then r
+  else getOpposite d   
+  where
+    (l, r) = get90DegDirections d
+  
+	
+-- ----------------------------------------
 -- calculates the next position
-calcNextMove            :: Ship -> Position -> Track -> Direction
-calcNextMove s r t =
-  if ((h == -1) && (not $ isBlocked (getBlockades t) (moveObject p LEFT) 0)) then LEFT
-  else if ((h == 1) && (not $ isBlocked (getBlockades t) (moveObject p RIGHT) 0)) then RIGHT
-  else if ((v == -1) && (not $ isBlocked (getBlockades t) (moveObject p UP) 0)) then UP
-  else if ((v == 1) && (not $ isBlocked (getBlockades t) (moveObject p DOWN) 0)) then DOWN
+calcNextMove            :: Ship -> Position -> Track -> Direction -> Direction
+calcNextMove s r t d =
+  if (h == -1 && d /= RIGHT) then LEFT
+  else if (h == 1 && d /= LEFT) then RIGHT
+  else if (v == -1 && d /= DOWN) then UP
+  else if (v == 1 && d /= UP) then DOWN
   else STOP
   where
     p = getShipPosition s
@@ -45,21 +80,25 @@ calcNextMove s r t =
 
 -- ----------------------------------------
 -- navigates a route
-navigate	:: Route -> ControlFunc
-naviagte [] id t
+navigate	:: Route -> Direction -> ControlFunc
+navigate [] _ _ t
   = return t
-navigate (r:rs) id t
+navigate (r:rs) oldD id t
   = do
     displayTrack t
-    if (d == STOP) then return t
+    print (r:rs)
+    getChar
+    if (d' == STOP) then return t
     else do
-      t <- moveShip t id d
+      t <- moveShip t id d'
       if (r == (getShipPosition $ getShipNull id $ getShips t)) then
-        navigate rs id t
+        navigate rs d' id t
       else
-        navigate (r:rs) id t
+        navigate (r:rs) d' id t
     where
-      d = calcNextMove s r t
+      p = getShipPosition $ getShipNull id $ getShips t
+      d = calcNextMove s r t oldD
+      d' = if ((isBlocked (getBlockades t) (moveObject p d) 0) || (d == STOP)) then findAlternative p t d else d
       s = getShipNull id $ getShips t
 
 
@@ -69,7 +108,7 @@ navigate (r:rs) id t
 --
 autoNav 	:: ControlFunc
 autoNav id t
-  = navigate (prepareRoute (getShipRoute s) (getShipPosition s)) id t
+  = navigate (prepareRoute (getShipRoute s) (getShipPosition s)) STOP id t
     where
       s = getShipNull id $ getShips t
 
